@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Meow Whisperer | 猫语观察器</title>
+    <meta
+      name="description"
+      content="通过可视化多选交互观察猫咪肢体语言与声音，基于专家规则输出内心独白、情绪解读与即时建议。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="shortcut icon" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./favicon.svg" />
+  </head>
+  <body>
+    <div class="bg-noise" aria-hidden="true"></div>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">移动端优先 · 无需下载 · 本地规则匹配</p>
+        <h1>Meow Whisperer</h1>
+        <p class="subtitle">用科学观察，听懂猫咪没说出口的话。</p>
+      </header>
+
+      <section class="card intro-card">
+        <h2>怎么用</h2>
+        <ol>
+          <li>勾选你看到的肢体语言、声音与场景</li>
+          <li>系统按规则库计算最可能的情绪状态</li>
+          <li>查看“猫咪内心独白”与可执行建议</li>
+        </ol>
+        <p class="privacy">隐私说明：本工具不上传数据，所有判断仅在当前页面完成。</p>
+      </section>
+
+      <section class="card tune-card" id="tune-card">
+        <div class="section-head">
+          <h2>规则调参</h2>
+          <p>通过权重调整不同信号对最终匹配结果的影响（仅保存到本机）。</p>
+        </div>
+        <div id="weight-controls" class="weight-controls"></div>
+        <div class="actions actions-compact">
+          <button class="btn ghost" id="save-weights-btn" type="button">保存权重</button>
+          <button class="btn ghost" id="reset-weights-btn" type="button">恢复默认</button>
+        </div>
+      </section>
+
+      <form id="observation-form" class="card form-card">
+        <section class="block">
+          <h3>观察模式</h3>
+          <div class="mode-switch" id="mode-switch">
+            <button class="chip mode-chip selected" id="mode-beginner-btn" type="button" data-mode="beginner">
+              初学者模式
+            </button>
+            <button class="chip mode-chip" id="mode-expert-btn" type="button" data-mode="expert">
+              专家模式
+            </button>
+          </div>
+          <p class="mode-tip" id="mode-tip">初学者模式：每个维度显示核心选项，适合快速上手。</p>
+        </section>
+
+        <section class="block">
+          <h3>耳朵状态</h3>
+          <div class="chip-group" data-group="ears"></div>
+        </section>
+
+        <section class="block">
+          <h3>尾巴状态</h3>
+          <div class="chip-group" data-group="tail"></div>
+        </section>
+
+        <section class="block">
+          <h3>眼部信号</h3>
+          <div class="chip-group" data-group="eyes"></div>
+        </section>
+
+        <section class="block">
+          <h3>身体姿态</h3>
+          <div class="chip-group" data-group="posture"></div>
+        </section>
+
+        <section class="block">
+          <h3>声音特征（可多选）</h3>
+          <div class="chip-group" data-group="voice"></div>
+        </section>
+
+        <section class="block">
+          <h3>当前场景</h3>
+          <div class="chip-group" data-group="scene"></div>
+        </section>
+
+        <section class="block">
+          <h3>额外信号（健康相关）</h3>
+          <div class="chip-group" data-group="health"></div>
+        </section>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">生成猫咪解读</button>
+          <button class="btn ghost" type="reset" id="reset-btn">清空重选</button>
+        </div>
+      </form>
+
+      <section class="card result-card" id="result-card" aria-live="polite">
+        <h2>解读结果</h2>
+        <p class="placeholder">完成上方选择后，这里会显示猫咪的情绪画像和建议。</p>
+      </section>
+
+      <section class="card history-card" id="history-card">
+        <div class="history-head">
+          <h2>观察时间线</h2>
+          <div class="history-actions">
+            <button class="btn tiny ghost" id="import-json-btn" type="button">导入 JSON</button>
+            <button class="btn tiny ghost" id="export-json-btn" type="button">导出 JSON</button>
+            <button class="btn tiny ghost" id="export-csv-btn" type="button">导出 CSV</button>
+            <button class="btn tiny ghost" id="clear-history-btn" type="button">清空记录</button>
+          </div>
+          <input id="import-json-input" type="file" accept="application/json" hidden />
+        </div>
+
+        <div class="history-filter">
+          <input id="history-search-input" class="filter-input" type="search" placeholder="搜索情绪/关键词" />
+          <select id="history-risk-filter" class="filter-select">
+            <option value="all">全部风险</option>
+            <option value="high">高风险</option>
+            <option value="medium">中风险</option>
+            <option value="low">低风险</option>
+          </select>
+          <select id="history-emotion-filter" class="filter-select">
+            <option value="all">全部情绪</option>
+          </select>
+          <input id="history-date-from" class="filter-date" type="date" />
+          <input id="history-date-to" class="filter-date" type="date" />
+        </div>
+
+        <div id="history-list" class="history-list">
+          <p class="placeholder">暂无记录。每次生成解读后会自动保存在本机。</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
